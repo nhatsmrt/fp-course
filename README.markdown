@@ -206,7 +206,7 @@ step is to complete the exercises in `Course.Optional`.
 
 After this, we recommend the following progression of modules:
 
-* `Course.List`
+* ~~`Course.List`~~
 * `Course.Functor`
 * `Course.Applicative`
 * `Course.Monad`

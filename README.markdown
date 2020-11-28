@@ -211,7 +211,7 @@ After this, we recommend the following progression of modules:
 * ~~`Course.Applicative`~~
 * ~~`Course.Monad`~~
 * ~~`Course.FileIO`~~
-* `Course.State`
+* ~~`Course.State`~~
 * `Course.StateT`
 * `Course.Extend`
 * `Course.Comonad`

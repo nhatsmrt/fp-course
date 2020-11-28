@@ -48,14 +48,12 @@ instance Applicative ExactlyOne where
   pure ::
     a
     -> ExactlyOne a
-  pure =
-    error "todo: Course.Applicative pure#instance ExactlyOne"
+  pure = ExactlyOne
   (<*>) ::
     ExactlyOne (a -> b)
     -> ExactlyOne a
     -> ExactlyOne b
-  (<*>) =
-    error "todo: Course.Applicative (<*>)#instance ExactlyOne"
+  (<*>) (ExactlyOne f) (ExactlyOne a) = ExactlyOne (f a)
 
 -- | Insert into a List.
 --
@@ -67,14 +65,12 @@ instance Applicative List where
   pure ::
     a
     -> List a
-  pure =
-    error "todo: Course.Applicative pure#instance List"
+  pure a = a :. Nil
   (<*>) ::
     List (a -> b)
     -> List a
     -> List b
-  (<*>) =
-    error "todo: Course.Apply (<*>)#instance List"
+  (<*>) fns lst = foldRight (\x -> \acc -> (map x lst) ++ acc) Nil fns
 
 -- | Insert into an Optional.
 --
@@ -92,14 +88,14 @@ instance Applicative Optional where
   pure ::
     a
     -> Optional a
-  pure =
-    error "todo: Course.Applicative pure#instance Optional"
+  pure = Full
   (<*>) ::
     Optional (a -> b)
     -> Optional a
     -> Optional b
-  (<*>) =
-    error "todo: Course.Apply (<*>)#instance Optional"
+  (<*>) option_fn option_a = case (option_fn, option_a) of
+    (Full fn, Full a) -> Full (fn a)
+    (_, _) -> Empty
 
 -- | Insert into a constant function.
 --
@@ -123,14 +119,12 @@ instance Applicative ((->) t) where
   pure ::
     a
     -> ((->) t a)
-  pure =
-    error "todo: Course.Applicative pure#((->) t)"
+  pure a = \_ -> a
   (<*>) ::
     ((->) t (a -> b))
     -> ((->) t a)
     -> ((->) t b)
-  (<*>) =
-    error "todo: Course.Apply (<*>)#instance ((->) t)"
+  (<*>) f1 f2 = \t -> (f1 t) (f2 t)
 
 
 -- | Apply a binary function in the environment.
@@ -158,8 +152,7 @@ lift2 ::
   -> k a
   -> k b
   -> k c
-lift2 =
-  error "todo: Course.Applicative#lift2"
+lift2 f ka kb = (pure f) <*> ka <*> kb
 
 -- | Apply a ternary function in the environment.
 -- /can be written using `lift2` and `(<*>)`./
@@ -191,8 +184,7 @@ lift3 ::
   -> k b
   -> k c
   -> k d
-lift3 =
-  error "todo: Course.Applicative#lift3"
+lift3 f ka kb kc = (pure f) <*> ka <*> kb <*> kc
 
 -- | Apply a quaternary function in the environment.
 -- /can be written using `lift3` and `(<*>)`./
@@ -225,16 +217,14 @@ lift4 ::
   -> k c
   -> k d
   -> k e
-lift4 =
-  error "todo: Course.Applicative#lift4"
+lift4 f ka kb kc kd = (pure f) <*> ka <*> kb <*> kc <*> kd
 
 -- | Apply a nullary function in the environment.
 lift0 ::
   Applicative k =>
   a
   -> k a
-lift0 =
-  error "todo: Course.Applicative#lift0"
+lift0 = pure
 
 -- | Apply a unary function in the environment.
 -- /can be written using `lift0` and `(<*>)`./
@@ -252,8 +242,7 @@ lift1 ::
   (a -> b)
   -> k a
   -> k b
-lift1 =
-  error "todo: Course.Applicative#lift1"
+lift1 f ka = (pure f) <*> ka
 
 -- | Apply, discarding the value of the first argument.
 -- Pronounced, right apply.
@@ -278,8 +267,7 @@ lift1 =
   k a
   -> k b
   -> k b
-(*>) =
-  error "todo: Course.Applicative#(*>)"
+(*>) ka kb = ((\_ -> (\x -> x)) <$> ka) <*> kb
 
 -- | Apply, discarding the value of the second argument.
 -- Pronounced, left apply.
@@ -304,8 +292,7 @@ lift1 =
   k b
   -> k a
   -> k b
-(<*) =
-  error "todo: Course.Applicative#(<*)"
+(<*) kb ka = ((\b -> (\_ -> b)) <$> kb) <*> ka
 
 -- | Sequences a list of structures to a structure of list.
 --
@@ -327,8 +314,10 @@ sequence ::
   Applicative k =>
   List (k a)
   -> k (List a)
-sequence =
-  error "todo: Course.Applicative#sequence"
+sequence kas =
+  case kas of
+    Nil -> pure (Nil)
+    kah :. kat -> lift2 (:.) kah (sequence kat)
 
 -- | Replicate an effect a given number of times.
 --
@@ -353,8 +342,9 @@ replicateA ::
   Int
   -> k a
   -> k (List a)
-replicateA =
-  error "todo: Course.Applicative#replicateA"
+replicateA n ka =
+  if n == 1 then lift1 (\a -> Course.List.replicate n a) ka
+  else lift2 (:.) ka (replicateA (n - 1) ka)
 
 -- | Filter a list with a predicate that produces an effect.
 --
@@ -376,13 +366,24 @@ replicateA =
 -- >>> filtering (const $ True :. True :.  Nil) (1 :. 2 :. 3 :. Nil)
 -- [[1,2,3],[1,2,3],[1,2,3],[1,2,3],[1,2,3],[1,2,3],[1,2,3],[1,2,3]]
 --
+
+productA :: Applicative k => k a -> k b -> k (a, b)
+productA ka kb = ((\a -> (\b -> (a, b))) <$> ka) <*> kb
+
 filtering ::
   Applicative k =>
   (a -> k Bool)
   -> List a
   -> k (List a)
-filtering =
-  error "todo: Course.Applicative#filtering"
+filtering pred as =
+  case as of
+    Nil -> pure Nil
+    a :. t ->
+      let remainder = filtering pred t in  -- k (List a)
+      let filteredHead = productA (pure a) (pred a) in  -- k (a, Bool)
+      let headProductRemainder = productA filteredHead remainder in -- k ((a, Bool), List a)
+      concatBool <$> headProductRemainder
+        where concatBool ((a, bool), lst) = if bool then a :. lst else lst
 
 -----------------------
 -- SUPPORT LIBRARIES --

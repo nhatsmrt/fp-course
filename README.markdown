@@ -210,7 +210,7 @@ After this, we recommend the following progression of modules:
 * ~~`Course.Functor`~~
 * ~~`Course.Applicative`~~
 * ~~`Course.Monad`~~
-* `Course.FileIO`
+* ~~`Course.FileIO`~~
 * `Course.State`
 * `Course.StateT`
 * `Course.Extend`

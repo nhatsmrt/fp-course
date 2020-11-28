@@ -202,7 +202,7 @@ is to inspect the introduction modules.
 
 They contain examples of data structures and Haskell syntax. They do not contain
 exercises and exist to provide a cursory examination of Haskell syntax. The next
-step is to complete the exercises in `Course.Optional`.
+step is to complete the exercises in ~~`Course.Optional`~~.
 
 After this, we recommend the following progression of modules:
 

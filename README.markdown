@@ -214,7 +214,7 @@ After this, we recommend the following progression of modules:
 * ~~`Course.State`~~
 * ~~`Course.StateT`~~
 * ~~`Course.Extend`~~
-* `Course.Comonad`
+* ~~`Course.Comonad`~~
 * `Course.Contravariant`
 * `Course.Compose`
 * `Course.Traversable`

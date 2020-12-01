@@ -219,7 +219,8 @@ After this, we recommend the following progression of modules:
 * ~~`Course.Compose`~~
 * ~~`Course.Traversable`~~
 * ~~`Course.ListZipper`~~
-* `Course.Parser` *(see also `Course.Person` for the parsing rules)*
+* ~~`Course.Parser` *(see also `Course.Person` for the parsing rules)*~~
+* `Course.Alternative`
 * `Course.MoreParser`
 * `Course.JsonParser`
 * `Course.Interactive`

@@ -323,5 +323,140 @@ fromChar _ =
 dollars ::
   Chars
   -> Chars
-dollars =
-  error "todo: Course.Cheque#dollars"
+-- dollars str = preprocess str
+dollars = process . preprocess
+  where
+    contains :: Chars -> Char -> Bool
+    contains str c = case str of
+      Nil -> False
+      h :. t -> h == c || (contains t c)
+
+    isDigit x = contains "0123456789" x
+    isNonZeroDigit x = contains "123456789" x
+
+    preprocess str = let filtered = filter (\x -> x == '.' || isDigit x) str in
+      if elem '.' filtered then filtered else filtered ++ "."
+
+    preprocessIntegerPart = (filter isDigit) . (dropWhile (not . isNonZeroDigit))
+
+    -- Split the string by the dot
+    splitByDot str = case break ((==) '.') str of
+      (integerPart, h :. t) -> (integerPart, t)
+      (integerPart, Nil) -> (integerPart, "")
+
+    -- Convert String to Optional (List Digit)
+    toDigits :: Chars -> List Digit
+    toDigits str = (sequence (fromChar <$> str)) ?? Nil
+
+    -- Augment fractional part
+    normalizeFractionalPart :: Chars -> Chars
+    normalizeFractionalPart fractionalPart = case fractionalPart of
+      Nil -> "00"
+      h :. Nil -> h :. "0"
+      h1 :. h2 :. _ -> h1 :. h2 :. Nil -- truncate
+
+    preprocessFractionalPart = normalizeFractionalPart . (filter isDigit)
+
+    -- Chunk the digits
+    chunkReversed :: List Digit -> List Digit3
+    chunkReversed lst = case lst of
+      Nil -> Nil
+      h :. Nil -> (D1 h) :. Nil
+      h1 :. h2 :. Nil -> (D2 h2 h1) :. Nil
+      h1 :. h2 :. h3 :. t -> (D3 h3 h2 h1) :. (chunkReversed t)
+
+    chunk = chunkReversed . reverse
+
+    ties tens = case tens of
+      Zero -> "zeroty" -- never used
+      One -> "onety" -- never used
+      Two -> "twenty"
+      Three -> "thirty"
+      Four -> "forty"
+      Five -> "fifty"
+      Six -> "sixty"
+      Seven -> "seventy"
+      Eight -> "eighty"
+      Nine -> "ninety"
+
+    teens dig = case dig of
+      Zero -> "ten"
+      One -> "eleven"
+      Two -> "twelve"
+      Three -> "thirteen"
+      Four -> "fourteen"
+      Five -> "fifteen"
+      Six -> "sixteen"
+      Seven -> "seventeen"
+      Eight -> "eighteen"
+      Nine -> "nineteen"
+
+
+    processSingle :: Digit -> Chars
+    processSingle x = case x of
+      Zero -> ""
+      _ -> showDigit x
+
+    processTens :: Digit -> Digit -> Chars
+    processTens x y = case (x, y) of
+      (Zero, _) -> processSingle y
+      (One, _) -> teens y
+      -- x is not zero
+      (_, Zero) -> (ties x)
+      (_, _) -> (ties x) ++ "-" ++ (showDigit y)
+
+    processHundreds :: Digit -> Digit -> Digit -> Chars
+    processHundreds x y z = case (x, y, z) of
+      (Zero, _, _) -> processTens y z
+      _ -> let tens = processTens y z in let hundreds = (showDigit x) ++ " hundred" in
+        if length tens > 0 then hundreds ++ " and " ++ tens else hundreds
+
+    processChunk :: Digit3 -> Chars
+    processChunk digits = case digits of
+      D1 x -> processSingle x
+      D2 x y -> processTens x y
+      D3 x y z -> processHundreds x y z
+
+    join :: List Chars -> Chars -> Chars
+    join lst sep = case lst of
+      Nil -> ""
+      h1 :. Nil -> h1
+      h1 :. h2 :. t -> h1 ++ sep ++ (join (h2 :. t) sep)
+
+    processChunks :: List Digit3 -> Chars
+    processChunks chunks = case processChunk <$> chunks of
+      Nil -> "zero"
+      h :. t ->
+        let chunksWithPower = zip (h :. t) illion in
+        let filteredEmptyChunks = filter (\(ch, power) -> length ch > 0) chunksWithPower in
+        let augmentedFilteredEmptyChunks = if length filteredEmptyChunks == 0 then ("zero", "") :. Nil else filteredEmptyChunks in
+        let concatChunkPower = (\(ch, power) -> if length power > 0 then ch ++ " " ++ power else ch) <$> augmentedFilteredEmptyChunks in
+        let inOrderedProcessedChunk = reverse concatChunkPower in
+        join inOrderedProcessedChunk " "
+
+
+    processPart :: (Chars -> Chars) -> Chars -> Chars
+    processPart preprocessFn = processChunks . chunk . toDigits . preprocessFn
+
+    eq :: Eq a => List a -> List a -> Bool
+    eq lst1 lst2 = case (lst1, lst2) of
+      (Nil, Nil) -> True
+      (h1 :. t1, h2 :. t2) -> (h1 == h2) && (eq t1 t2)
+      _ -> False
+
+    processIntegerPart :: Chars -> Chars
+    processIntegerPart integerPart =
+      let processedIntegerPart = processPart preprocessIntegerPart integerPart in
+      let dollar = if eq processedIntegerPart "one" then "dollar" else "dollars" in
+      processedIntegerPart ++ " " ++ dollar
+
+    processFractionalPart :: Chars -> Chars
+    processFractionalPart fractionalPart =
+      let processedFractionalPart = processPart preprocessFractionalPart fractionalPart in
+      let cents = if eq processedFractionalPart "one" then "cent" else "cents" in
+      processedFractionalPart ++ " " ++ cents
+
+    process :: Chars -> Chars
+    process str =
+      let (integerPart, fractionalPart) = splitByDot str in
+      (processIntegerPart integerPart) ++ " and " ++ (processFractionalPart fractionalPart)

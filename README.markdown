@@ -226,7 +226,7 @@ After this, we recommend the following progression of modules:
 * ~~`Course.Interactive`~~
 * ~~`Course.Anagrams`~~
 * ~~`Course.FastAnagrams`~~
-* `Course.Cheque`
+* ~~`Course.Cheque`~~
 
 During this progression, it is often the case that some exercises are abandoned
 due to time constraints and the benefit of completing some exercises over

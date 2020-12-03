@@ -223,7 +223,7 @@ After this, we recommend the following progression of modules:
 * ~~`Course.Alternative`~~
 * ~~`Course.MoreParser`~~
 * ~~`Course.JsonParser`~~
-* `Course.Interactive`
+* ~~`Course.Interactive`~~
 * `Course.Anagrams`
 * `Course.FastAnagrams`
 * `Course.Cheque`

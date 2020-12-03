@@ -16,8 +16,10 @@ fastAnagrams ::
   Chars
   -> FilePath
   -> IO (List Chars)
-fastAnagrams =
-  error "todo: Course.FastAnagrams#fastAnagrams"
+fastAnagrams str fp = (\content -> filter (\x -> S.member x strPerm) (lines content)) <$> (readFile fp)
+  where
+    strPerm = foldLeft (\acc x -> S.insert x acc)  S.empty (permutations str)
+
 
 newtype NoCaseString =
   NoCaseString {

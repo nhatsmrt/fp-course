@@ -224,8 +224,8 @@ After this, we recommend the following progression of modules:
 * ~~`Course.MoreParser`~~
 * ~~`Course.JsonParser`~~
 * ~~`Course.Interactive`~~
-* `Course.Anagrams`
-* `Course.FastAnagrams`
+* ~~`Course.Anagrams`~~
+* ~~`Course.FastAnagrams`~~
 * `Course.Cheque`
 
 During this progression, it is often the case that some exercises are abandoned

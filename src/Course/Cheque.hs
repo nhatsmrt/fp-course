@@ -323,7 +323,6 @@ fromChar _ =
 dollars ::
   Chars
   -> Chars
--- dollars str = preprocess str
 dollars = process . preprocess
   where
     contains :: Chars -> Char -> Bool
@@ -334,8 +333,7 @@ dollars = process . preprocess
     isDigit x = contains "0123456789" x
     isNonZeroDigit x = contains "123456789" x
 
-    preprocess str = let filtered = filter (\x -> x == '.' || isDigit x) str in
-      if elem '.' filtered then filtered else filtered ++ "."
+    preprocess str = filter (\x -> x == '.' || isDigit x) str
 
     preprocessIntegerPart = (filter isDigit) . (dropWhile (not . isNonZeroDigit))
 

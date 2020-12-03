@@ -222,7 +222,7 @@ After this, we recommend the following progression of modules:
 * ~~`Course.Parser` *(see also `Course.Person` for the parsing rules)*~~
 * ~~`Course.Alternative`~~
 * ~~`Course.MoreParser`~~
-* `Course.JsonParser`
+* ~~`Course.JsonParser`~~
 * `Course.Interactive`
 * `Course.Anagrams`
 * `Course.FastAnagrams`
